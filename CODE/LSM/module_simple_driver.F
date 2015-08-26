@@ -663,7 +663,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SOIL = SOIL1 
    SLOPE = SLOPE1
 
-   ALBEDOM    = ALBEDOM1
+   ALBEDOM    = ALBEDOM1/100.
    SHDFAC     = GREENFRACM 
    LAIM       = LAIM1
    SHDMAX     = SHDMAX1
@@ -768,7 +768,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   !
 
 !  ALBEDO = month_d (albedo_monthly, startdate)
-  ALBEDO = ALBEDOM/100.0
+  ALBEDO = ALBEDOM
 
   !
   ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
