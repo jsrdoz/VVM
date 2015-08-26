@@ -82,7 +82,9 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 #if defined (LSM)
 
-      
+!      print*,my_task,lALBEDO(10,10),'===='
+
+
       T2i = real(T2)
       Q2i = real(Q2)            
       swDi = real(swD) 
@@ -108,6 +110,7 @@ CONTAINS
       WT = dble(WTi)
       WQ = dble(WQi)
 
+!      print*,my_task,lALBEDO(10,10)
 
 !       WT = 0.
 !       WQ = 0.
@@ -383,9 +386,7 @@ CONTAINS
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
                        lALBEDO,lEMISSI,lT1,lST,lSM,lSL,lET,lSMAV)
 
-
 #endif
-
 
    END SUBROUTINE land_ini
 

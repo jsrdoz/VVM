@@ -242,7 +242,7 @@ CONTAINS
 
   160 CONTINUE
 
-      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
+!      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
 
 !     PROFILES OF RHO, RHOz, AND GAMMA
@@ -464,7 +464,6 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
 
   660 CONTINUE
-
 
       CALL BOUND_3D_XY
 

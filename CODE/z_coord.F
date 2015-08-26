@@ -60,7 +60,7 @@ CONTAINS
 !      KT1 = 4000/INT(DZ1)
       KT1 = MIN(KT1,NK2)
 
-      PRINT*,KT,KT1,ZZ(KT)
+!      PRINT*,KT,KT1,ZZ(KT)
 
       ZZ(1) = ZB 
       FNZ(1) = DZ/DZ1
