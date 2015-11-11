@@ -54,7 +54,7 @@ CPPFLAGS = -P -traditional -I$(BINDIR) -I${PETSC_DIR}/include
 
 SUF      = f
 
-INC =  -I${NETCDF}/include -I${PNETCDF}/include -I${HDF5}/include -I${PETSC_DIR}/include -I$(CDECKS)
+INC =  -I${NETCDF}/include -I${PNETCDF}/include -I${HDF5}/include -I${PETSC_DIR}/include/ -I$(CDECKS)
 
 FC = ${FLINKER}
 
