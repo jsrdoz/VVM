@@ -89,6 +89,7 @@ CONTAINS
 
       POWE=1._dbl_kind/3._dbl_kind
       DELD=(DX*DYNEW*DZ)**POWE
+!      DELD=(DX*DYNEW*DZ/FNZ(1))**POWE ! old RCE-code
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
@@ -240,10 +241,10 @@ CONTAINS
       DO 248 J=1,MJ1
       DO 248 I=1,MI1
 
-      hxp =INT( hx(I,J))+1
-      ztmp = ZT(hxp-1)
-!      hxp = 1
-!      ztmp = 0.
+!      hxp =INT( hx(I,J))+1
+!     ztmp = ZT(hxp-1)
+      hxp = 1.
+      ztmp = 0.
       DO 248 K=hxp,NK2
       DDX(I,J,K)= RAMD0S*(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2)   &
                  /(RAMD0S+(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2))
@@ -880,8 +881,20 @@ CONTAINS
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
       else
+
+!!!  old RCE code
+!      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
+!                     USTAR,VENTFC,MOLEN)
+!      if(psfx) THEN
+!        WT(I,J) = fss(i,j)
+!        WQ(I,J) = fws(i,j) / hlf
+!      ELSE
+!        WT(I,J) = VENTFC(2) * (TS-T)
+!        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
+!      ENDIF
+
       WT(I,J)=0.
-      WQ(I,j)=0.
+      WQ(I,J)=0.
       VEN2D(I,J)=0.
       endif
 
@@ -927,13 +940,10 @@ CONTAINS
       hxv1=INT(hxv(I,J))
 
 !====hchun
-      WQV(I,J) = WQ(I,J)
-      WTH(I,J) = WT(I,J)/(1004.5*PIBAR(hx1))
-!      WQV(I,J) = WQ(I,J)*RHOZ(hx1)
-!      WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
-!=========
-!      WQV(I,J)=0.
-!      WTH(I,J)=0. !turn on momentum drag, not surface fluxes
+!      WQV(I,J) = WQ(I,J)
+!      WTH(I,J) = WT(I,J)/(1004.5*PIBAR(hx1))
+      WQV(I,J) = WQ(I,J)*RHOZ(hx1)
+      WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
 
       if(hxu1 .gt. 0) then
       UW(I,J)  = UW(I,J)*RHOZ(hxu1)

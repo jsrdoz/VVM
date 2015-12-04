@@ -40,12 +40,12 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          RDHOUR  
       INTEGER (KIND=int_kind) :: &
-         i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
-         n,    &    ! time level index
-         i00, j00, &!
+         i, j, k,  & ! do loop indices for zonal, meridional and vertical dimensions
+         n,        & ! time level index
+         i00, j00, & !
          IQ,JQ 
       REAL (KIND=dbl_kind) ::    &
-         scaleq=0._dbl_kind, & !
+         scaleq=0._dbl_kind, & 
          rkappa,             &
          rkappai,            &
          gamfac, a0, z00, xr, yr, zr, dist,tmp
@@ -53,62 +53,47 @@ CONTAINS
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
-      REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
+      REAL (KIND=dbl_kind) :: PZERO = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
 
       integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/33/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(33),PI1(33),TV1(33),PILOG1(33)
-      REAL (KIND=dbl_kind) :: PQ1(33),P1(33),T1(33),QV1(33),QC1(33)
-      DATA PQ1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA T1/281.7,261.4,243.0,232.8,220.5,206.9,192.8,179.5,167.8,&
-              156.5,145.0,118.4,83.4,37.9,0.2,-32.8,-78.3,-132.6,&
-              -194.9,-275.9,-378.5,-438.5,-502.7,-573.8,-645.4,-714.3,&
-              -764.8,-728.1,-650.5,-560.5,-515.1,-422.4,-384.0/
-      DATA QV1/200.6,200.2,189.3,169.8,160.3,151.3,142.3,132.9,124.3,&
-               115.7,108.2,93.6,76.1,62.0,51.4,43.5,34.8,26.4,17.0,&
-               8.1,3.7,2.6,1.8,0.9,0.4,0.2,7*0.0/
-      DATA QC1/33*0./
+                             ,QCBAR(NK3),QVSBAR(NK3)
+      DATA NU1/45/,NT1/45/
+      REAL (KIND=dbl_kind) :: ZT1(45),PI1(45),TV1(45),PILOG1(45)
+      REAL (KIND=dbl_kind) :: P1(45),T1(45),QV1(45),QC1(45),QI1(45),U1(45),V1(45)
+      DATA P1/101200.000,100958.328,100211.289,99117.688,97685.719, &
+              95926.078,93855.578,91493.602,88858.555,85973.406, &
+              82863.273,79554.664,76075.109,72452.047,68713.266, &
+              64886.848,61002.438,57090.676,53180.395,49298.633, &
+              45469.191,41713.547,38051.828,34501.340,31078.350, &
+              27797.010,24670.168,21711.666,18935.383,16357.084, &
+              13995.836,11871.104,9998.349,8376.222,6984.112,    &
+              5796.145,4788.001,3937.121,3222.818,2626.324,      &
+              2130.786,1721.212,1384.381,1108.735,884.252/
+      DATA T1/299.177,299.177,298.598,297.493,296.46,295.196,293.724, &
+              292.091,290.345,288.514,286.607,284.607,282.483,280.194,&
+              277.712,275.343,272.474,269.6,266.376,262.776,258.763,  &
+              254.62,249.98,244.792,239.1,233.362,226.979,220.789,    &
+              214.925,208.962,204.016,200.603,198.947,198.335,198.451,&
+              199.421,200.56,201.303,202.163,202.574,203.656,204.292, &
+              205.023,205.944,206.768/
+      DATA QV1/14.6151,14.6151,14.4671,14.277,14.0569,13.7839,13.4263, &
+               12.9517,12.3461,11.6249,10.8107,9.92502,8.99718,8.05715,&
+               7.12757,6.20328,5.29679,4.41928,3.5819,2.82005,2.14424, &
+               1.56703,1.09963,0.739107,0.474473,0.282205,0.158877,    &
+               0.0847318,0.0439357,0.023083,0.0132768,0.00929994,      &
+               0.00853174,0.00952117,0.0116401,0.0136316,0.015807,     &
+               0.0180786,0.0204104,0.0227946,0.0252322,0.0277319,      &
+               0.0302865,0.0329075,0.0355364/
 
-
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
-
-      REAL (KIND=dbl_kind) ::  PU1(33),U1(33),V1(33)
-      DATA PU1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA U1/   3.0,   3.4,   3.7,   3.6,   3.0,   2.5,   2.0,   1.7, &
-                 1.8,   1.8,   1.9,   2.1,   2.1,   1.9,   1.1,   0.1, &
-                -0.6,  -1.1,  -1.5,  -2.3,  -2.5,  -2.0,  -0.8,  -1.8, &
-                -6.1, -11.8, -18.7, -22.6, -16.7, -19.1, -23.0, -25.1, &
-               -28.0/
-      DATA V1/   1.1,   1.3,   1.3,   1.2,   1.1,   1.2,   1.4,   1.3, &
-                 1.0,   0.7,   0.3,  -0.3,  -0.7,  -1.7,  -2.9,  -3.1, &
-                -2.8,  -1.3,   1.1,   1.5,  -0.3,  -2.5,  -5.0,  -5.5, &
-                -6.2,  -7.5,  -8.7,  -5.7,   1.8,  -2.6,  -3.1,  -2.0, &    
-                -1.8/
-
+      REAL (KIND=dbl_kind)  :: Q1OBS(20),Q2OBS(20),PQ1(20)
+      REAL (KIND=dbl_kind)  :: SST2
+      REAL (KIND=real_kind) :: TGout(MI_glob,MJ_glob)
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -119,32 +104,25 @@ CONTAINS
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-!SST=299.88K
 
-!      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 301.122
+      SST2 = 301.122     
 
-       SST = 303.
-      
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
-      PSFC = P1(1)
+      DO K = 1, NU1
+      U1(K) = 0
+      V1(K) = 0
+      ENDDO
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * .1 +273.16
-      QV1(K)= QV1(K)*1e-4
+      T1(K) = T1(K)
+      QV1(K)= QV1(K)*1e-3
+      P1(K) = P1(K)/100
   100 CONTINUE
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
   110 CONTINUE
-
-!     *** MIXED LAYER PROFILE ***
-
-      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -157,49 +135,30 @@ CONTAINS
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
+      QI1(K) = 0.
   120 CONTINUE
-
-
-!     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
-!     UNITS ARE T : DEG K, QV : G/G.
 
       DO 130 K = 1, NT1
       PILOG1(K) = LOG ( PI1(K) )
       TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
 
-      ZT1(1) = Zz(1)
-
+        ZT1(1) = ZZ(1)
+          T(1) = T1(1)
+      QVBAR(1) = QV1(1)
+      QCBAR(1) = QC1(1)
       DO 140 K = 2, NT1
       ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
               *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
   140 CONTINUE
-!     LOCATE J = 1 T-LEVEL AT ZW(1).
 
-      ZT(1)    = Zz(1)
-      T(1)     = T1(1)
-      QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
-
-!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
-
-      DO 150 K = 2, NK3
-      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
-      K2 = K1 + 1
-      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
-      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-  150 CONTINUE
-
-!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
+!     CALCULATE CONSTANT :  CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
 
       GDZBCP = 2. * GRAV * DZ / CP
       CPBR = CP / RGAS
       RBCP = 1. / CPBR
 
-!     CONVERT PRESSURES TO PASCALS
-
+      PSFC  = P1(1)
       PSFC  = PSFC * 100.
       PZERO = PZERO * 100.
 
@@ -209,7 +168,15 @@ CONTAINS
       PIBAR(1) = PISFC
       PILOG(1) = LOG ( PIBAR(1) )
 
-      DO 160 IT = 1, 3
+! =====================     INTERPLATE TO MODEL LEVEL    ===================
+
+      DO 150 K = 2, NK3
+      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
+      K2 = K1 + 1
+      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
+      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
+      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+  150 CONTINUE
 
       DO 162 K = 1, NK3
       TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
@@ -226,8 +193,6 @@ CONTAINS
       PBAR(K) = PZERO * PIBAR(K) ** CPBR
   166 CONTINUE
 
-!     ADJUST T, QVBAR AND QCBAR.
-
       DO 168 K = 1, NK3
       T8 = T(K)
       P8 = PBAR(K) * 0.01
@@ -243,11 +208,7 @@ CONTAINS
       QCBAR(K) = 0.
   168 CONTINUE
 
-  160 CONTINUE
-
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
-
-
 !     PROFILES OF RHO, RHOz, AND GAMMA
 
       GAMFAC = HLF / CP
@@ -259,20 +220,17 @@ CONTAINS
 
       DO 180 K = 2, NK2
       ALPHAW = ( ALPHA(K) + ALPHA(K+1) ) / 2.
-      RHOz(K) = 1. / ALPHAW
+      RHOZ(K) = 1. / ALPHAW
   180 CONTINUE
 
-!     SURFACE DENSITY
-
+!     DENSITY
       RHOz(1) = PSFC / ( RGAS * TV(1) )
-
       DO 190 K = 2, NK3
       RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
-
 !     DENSITY FOR k=1/2
+      RHO(1) = RHOZ(1)
 
-      RHO(1) = RHOz(1)
 
       DO 101 K=1,NK3
       ZW(K)=ZZ(K)  ! This line added with removal of equivalence in constld
@@ -287,17 +245,12 @@ CONTAINS
   102 CONTINUE
 
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
+      K1 = INDEXR(PBAR(K)*0.01,20,P1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+        FINTRP(1,PBAR(K)*0.01,P1(K1),Q1OBS(K1),P1(K2),Q1OBS(K2))
       Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
-      Q1LS (K) = 0.0
-      Q2LS (K) = 0.0
-      END IF
+        FINTRP(1,PBAR(K)*0.01,P1(K1),Q2OBS(K1),P1(K2),Q2OBS(K2))
   200 CONTINUE
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
@@ -318,27 +271,32 @@ CONTAINS
 
       DO 220 K = 2, NK2
       PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+      K1 = INDEXR(PBARMB,NU1,P1,LF)
       K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-!===hchun
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-!========
+      UG(K) = FINTRP(1,PBARMB,P1(K1),U1(K1),P1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
   220 CONTINUE 
-      UG(1)   = UG(2)
-      UG(NK3) = UG(NK2)
-!===hchun
-      VG(1)   = VG(2)
-      VG(NK3) = VG(NK2)
-!      vG(:)   = 0.
-!========
 
 !     OCEAN POINTS
 
       DO 300 J = mjm,mjp
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
-      TG(I,J)=SST
+      TG(I,J) = SST
+! sst by jjsun
+      IQ = ni_sbdm*mi1+I
+      JQ = nj_sbdm*mj1+J
+      TGout(IQ,JQ)=SST
+      if (IQ.GE.MI_glob/8*3+1.and.IQ.LE.MI_glob/8*5) then
+      TG(I,J) = SST2
+      TGout(IQ,JQ) = SST2
+      elseif (IQ.GE.MI_glob/8*2+1.and.IQ.LE.MI_glob/8*3) then
+      TG(I,J) = SST + (SST2-SST)*(IQ-MI_glob/8*2)/(MI_glob/8)
+      TGout(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_glob/8*2)/(MI_glob/8)
+      elseif (IQ.GE.MI_glob/8*5+1.and.IQ.LE.MI_glob/8*6) then
+      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_glob/8*5)/(MI_glob/8)
+      TGout(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_glob/8*5)/(MI_glob/8)
+      endif
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -347,12 +305,8 @@ CONTAINS
 
       WRITE(95,*) '************* INITIAL PROFILE ****************'
       WRITE(95,401)
-!===hchun
       WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
                      VG(K),K=2,NK2)
-!      WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
-!                     K=2,NK2)
-!========
       WRITE(95,*) 
       WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
@@ -383,11 +337,6 @@ CONTAINS
       write(99,rec=5) temp
       CLOSE(99)
       endif
-
-
-
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
 
 !*********************************************************
@@ -448,14 +397,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!ccwu_ini_wind 
-!      U3DX(I,J,K)=5.
-!      U3DY(I,J,K)=0.
-!hchun
-!      U3DX(I,J,K)=-5.
-!      U3DY(I,J,K)=-5.
-      U3DX(I,J,K)=3.1
-      U3DY(I,J,K)=1.1
+      U3DX(I,J,K)=0
+      U3DY(I,J,K)=0
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -465,10 +408,7 @@ CONTAINS
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
       Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW    &
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
-
   660 CONTINUE
-
-
       CALL BOUND_3D_XY
 
 
@@ -479,7 +419,6 @@ CONTAINS
 
       CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
       CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
-
       CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
 !-------------------
 #endif
