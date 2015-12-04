@@ -876,27 +876,27 @@ CONTAINS
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
-      if(hx1 .ge. 2) then  ! apply fluxes over land only
+!      if(hx1 .ge. 2) then  ! apply fluxes over land only
 
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
-      else
+!      else
 
 !!!  old RCE code
 !      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
 !                     USTAR,VENTFC,MOLEN)
-!      if(psfx) THEN
-!        WT(I,J) = fss(i,j)
-!        WQ(I,J) = fws(i,j) / hlf
-!      ELSE
-!        WT(I,J) = VENTFC(2) * (TS-T)
-!        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
-!      ENDIF
+      if(psfx) THEN
+        WT(I,J) = fss(i,j)
+        WQ(I,J) = fws(i,j) / hlf
+      ELSE
+        WT(I,J) = VENTFC(2) * (TS-T)
+        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
+      ENDIF
 
-      WT(I,J)=0.
-      WQ(I,J)=0.
-      VEN2D(I,J)=0.
-      endif
+!      WT(I,J)=0.
+!      WQ(I,J)=0.
+!      VEN2D(I,J)=0.
+!      endif
 
   110 CONTINUE
 
