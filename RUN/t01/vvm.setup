@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = t01
+set expname = test
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -52,10 +52,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/120/' \
-    -e '1,$s/merid_dimension/120/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
+sed -e '1,$s/zonal_dimension/1500/' \
+    -e '1,$s/merid_dimension/100/' \
+    -e '1,$s/zonal_decomposition/10/' \
+    -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/50/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90

@@ -18,7 +18,7 @@ module load intel14/comp intel14/hdf5-1.8.12 intel14/openmpi-1.8 intel14/netcdf-
 
 
 set echo  # echoes the commands
-set expname = t01
+set expname = `grep 'expname =' ./vvm.setup |awk '{print $4}'`
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
