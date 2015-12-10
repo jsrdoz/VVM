@@ -105,8 +105,8 @@ CONTAINS
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
 
-      SST = 301.122
-      SST2 = 301.122     
+      SST = 300
+      SST2 = 300      !higher sst
 
       DO K = 1, NU1
       U1(K) = 0

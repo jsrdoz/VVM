@@ -897,6 +897,7 @@ CONTAINS
 !      WQ(I,J)=0.
 !      VEN2D(I,J)=0.
 !      endif
+      VEN2D(I,J) = VENTFC(1)
 
   110 CONTINUE
 

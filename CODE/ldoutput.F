@@ -495,11 +495,11 @@ CONTAINS
                        PBAR_s(i),PIBAR_s(i),QVBAR_s(i)
       enddo
       write(98,*) '============================================'
-      write(98,*) 'K,UG(K),Q1LS(K),Q2LS(K)'
+      write(98,*) 'K,UG(K),VG(K),Q1LS(K),Q2LS(K)'
       write(98,*) '============================================'
       do i=1, NK3
       UG_s(i)=UG(i)
-      vG_s(i)=vG(i)
+      VG_s(i)=VG(i)
       Q1LS_s(i)=Q1LS(i)
       Q2LS_s(i)=Q2LS(i)
       write(98,'(i3,2F12.3,3E12.3)') i,UG_s(i), vg_s(i),              &
