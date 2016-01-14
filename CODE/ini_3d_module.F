@@ -1,128 +1,94 @@
 #include "definesld.com"
-MODULE ini_3d_module
+MODULE INI_3D_MODULE
 
-USE kinds
+USE KINDS
 USE PARMSLD
 USE CONSTLD
-USE workcom
-USE const3d
-USE utils
-USE bound
-USE update_tracer_module
-USE z_coord
-USE domain_decomposition
+USE WORKCOM
+USE CONST3D
+USE UTILS
+USE BOUND
+USE UPDATE_TRACER_MODULE
+USE Z_COORD
+USE DOMAIN_DECOMPOSITION
 #if defined (DIFFUSION)
-USE TURB_3D_module
+USE TURB_3D_MODULE
 #if defined (LSM)
-USE land_module
+USE LAND_MODULE
 #endif
 #endif
-USE petscsys
+USE PETSCSYS
 
 IMPLICIT NONE
 PRIVATE
 
-! public member functions
+! PUBLIC MEMBER FUNCTIONS
 PUBLIC ::     &
-   ini_3d,     &
-   ptspec  
+   INI_3D,     &
+   PTSPEC  
    
 CONTAINS
 
 !=======================================================================
-   SUBROUTINE INI_3D (itt)
+   SUBROUTINE INI_3D (ITT)
 !=======================================================================
 
-!     Set up I.C. 
+!     SET UP I.C. 
 
-      integer (kind=int_kind), intent(in) :: itt
+      INTEGER (KIND=INT_KIND), INTENT(IN) :: ITT
 
-      INTEGER (KIND=int_kind) :: &
+      INTEGER (KIND=INT_KIND) :: &
          RDHOUR  
-      INTEGER (KIND=int_kind) :: &
-         i, j, k,  & ! do loop indices for zonal, meridional and vertical dimensions
-         n,        & ! time level index
-         i00, j00, & !
+      INTEGER (KIND=INT_KIND) :: &
+         I, J, K,  & ! DO LOOP INDICES FOR ZONAL, MERIDIONAL AND VERTICAL DIMENSIONS
+         N,        & ! TIME LEVEL INDEX
+         I00, J00, & !
          IQ,JQ 
-      REAL (KIND=dbl_kind) ::    &
-         scaleq=0._dbl_kind, & 
-         rkappa,             &
-         rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
-      REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
-      REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
-      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
-      REAL (KIND=dbl_kind) :: PZERO = 1000._dbl_kind      
-      REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
-      REAL (KIND=int_kind) :: temp(NK3)
+      REAL (KIND=DBL_KIND) ::    &
+         SCALEQ=0._DBL_KIND, & 
+         RKAPPA,             &
+         RKAPPAI,            &
+         GAMFAC, A0, Z00, XR, YR, ZR, DIST,TMP
+      REAL (KIND=DBL_KIND), PARAMETER :: TH00 = 300._DBL_KIND      
+      REAL (KIND=DBL_KIND), PARAMETER :: RGAS = 287.04     
+      REAL (KIND=DBL_KIND), PARAMETER :: RAD1 = -2.    
+      REAL (KIND=DBL_KIND), PARAMETER :: SECDAY = 86400.    
+      REAL (KIND=DBL_KIND) :: PZERO = 1000._DBL_KIND      
+      REAL (KIND=DBL_KIND) :: P_INT(NK2),PI_INT(NK2) 
+      REAL (KIND=INT_KIND) :: TEMP(NK3)
 
-      integer nu1, nt1, k1, k2, it
-      logical lf
-      DATA NU1/45/,NT1/45/
-      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb
-      REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
+      INTEGER NU1, NT1, K1, K2, IT
+      LOGICAL LF
+      DATA NU1/33/,NT1/33/
+      REAL(KIND=DBL_KIND) :: RBCP, T8, P8, QV8, QC8, QI8, DUMMY, GDZBCP, CPBR, &
+                             ES1, ALPHAW, PBARMB
+      REAL (KIND=DBL_KIND) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
                              ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(45),PI1(45),TV1(45),PILOG1(45)
-      REAL (KIND=dbl_kind) :: P1(45),T1(45),QV1(45),QC1(45),QI1(45)
+      REAL (KIND=DBL_KIND) :: ZT1(33),PI1(33),TV1(33),PILOG1(33)
+      REAL (KIND=DBL_KIND) :: P1(33),T1(33),QV1(33),QC1(33)
+      REAL (KIND=DBL_KIND) :: U1(33),V1(33)
+      REAL (KIND=DBL_KIND) :: Q1OBS(20),Q2OBS(20),PQ1(20)
 
-      DATA P1/101200.000,100958.328,100211.289,99117.688,97685.719, &
-              95926.078,93855.578,91493.602,88858.555,85973.406, &
-              82863.273,79554.664,76075.109,72452.047,68713.266, &
-              64886.848,61002.438,57090.676,53180.395,49298.633, &
-              45469.191,41713.547,38051.828,34501.340,31078.350, &
-              27797.010,24670.168,21711.666,18935.383,16357.084, &
-              13995.836,11871.104,9998.349,8376.222,6984.112,    &
-              5796.145,4788.001,3937.121,3222.818,2626.324,      &
-              2130.786,1721.212,1384.381,1108.735,884.252/
-      DATA T1/299.177,299.177,298.598,297.493,296.46,295.196,293.724, &
-              292.091,290.345,288.514,286.607,284.607,282.483,280.194,&
-              277.712,275.343,272.474,269.6,266.376,262.776,258.763,  &
-              254.62,249.98,244.792,239.1,233.362,226.979,220.789,    &
-              214.925,208.962,204.016,200.603,198.947,198.335,198.451,&
-              199.421,200.56,201.303,202.163,202.574,203.656,204.292, &
-              205.023,205.944,206.768/
-      DATA QV1/14.6151,14.6151,14.4671,14.277,14.0569,13.7839,13.4263, &
-               12.9517,12.3461,11.6249,10.8107,9.92502,8.99718,8.05715,&
-               7.12757,6.20328,5.29679,4.41928,3.5819,2.82005,2.14424, &
-               1.56703,1.09963,0.739107,0.474473,0.282205,0.158877,    &
-               0.0847318,0.0439357,0.023083,0.0132768,0.00929994,      &
-               0.00853174,0.00952117,0.0116401,0.0136316,0.015807,     &
-               0.0180786,0.0204104,0.0227946,0.0252322,0.0277319,      &
-               0.0302865,0.0329075,0.0355364/
+      REAL (KIND=DBL_KIND) :: SST2
+      REAL (KIND=REAL_KIND):: TGOUT(MI_GLOB,MJ_GLOB)
 
-      REAL (KIND=dbl_kind)  :: Q1OBS(20),Q2OBS(20),PQ1(20)
+      DATA P1 /1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
+                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
+                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
+                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
+                161.6, 139.4, 119.2, 101.4,  85.8 /
+      DATA T1/300.41,299.95,299.27,298.40,297.60,296.81,295.85,294.69 &
+             ,293.38,291.91,290.29,288.72,286.88,284.90,282.62,280.14 &
+             ,277.51,274.55,271.49,268.14,264.55,260.73,256.46,251.93 &
+             ,246.90,241.30,234.76,227.68,219.85,211.77,204.24,196.16 &
+             ,196.03/
+      DATA QV1/22.4,22.0,21.6,20.8,20.1,19.3,18.6,18.0,17.1,16.2,15.3 &
+              ,14.2,13.3,12.1,11.0,9.8,8.6,7.5,6.5,5.4,4.5,3.6,2.8,2.0 &
+              ,1.4,0.8,0.4,0.2,0.1,0.0,0.0,0.0,0.0/
+      DATA QC1/33*0./
+     
 
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA Q2OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q1OBS/       &
-         0,   0.9602,   2.0996,   2.4020,   3.0104,   2.8574,&
-    2.1254,   1.6832,   1.3688,   1.2363,   1.3284,   1.7688,&
-    2.5423,   3.0526,   2.8002,   2.1543,   1.7458,   1.6167,&
-    1.5352,   1.3562/
-
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
-
-      REAL (KIND=dbl_kind) ::  PU1(45),U1(45),V1(45)
-      DATA PU1/101200.000,100958.328,100211.289,99117.688,97685.719, &
-              95926.078,93855.578,91493.602,88858.555,85973.406, &
-              82863.273,79554.664,76075.109,72452.047,68713.266, &
-              64886.848,61002.438,57090.676,53180.395,49298.633, &
-              45469.191,41713.547,38051.828,34501.340,31078.350, &
-              27797.010,24670.168,21711.666,18935.383,16357.084, &
-              13995.836,11871.104,9998.349,8376.222,6984.112,    &
-              5796.145,4788.001,3937.121,3222.818,2626.324,      &
-              2130.786,1721.212,1384.381,1108.735,884.252/
-      REAL (KIND=dbl_kind) :: SST2
-      REAL (KIND=real_kind) :: TGout(MI_glob,MJ_glob)
-      casename= 'GATE_PHASE_III'
-      PU1=PU1/100.
+      CASENAME= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -134,17 +100,16 @@ CONTAINS
 !*****************************************************
 
       SST = 300
-      SST2 = 300      !higher sst
+      SST2 = 303      !HIGHER SST
 
       DO K = 1, NU1
-      U1(K) = -5 + 0.2 * (K-1)
-      V1(K) =  5 - 0.2 * (K-1)
+      U1(K) = 0
+      V1(K) = 0
       ENDDO
 
       DO 100 K = 1, NT1
       T1(K) = T1(K)
-      QV1(K)= QV1(K)*1e-3
-      P1(K) = P1(K)/100
+      QV1(K)= QV1(K)*1E-3
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -160,10 +125,8 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      CALL SATURATION ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
-      QC1(K) = 0.
-      QI1(K) = 0.
   120 CONTINUE
 
       DO 130 K = 1, NT1
@@ -174,7 +137,6 @@ CONTAINS
         ZT1(1) = ZZ(1)
           T(1) = T1(1)
       QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
       DO 140 K = 2, NT1
       ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
               *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
@@ -203,7 +165,6 @@ CONTAINS
       K2 = K1 + 1
       T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
   150 CONTINUE
 
       DO 162 K = 1, NK3
@@ -211,7 +172,7 @@ CONTAINS
   162 CONTINUE
 
       PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
-              *(ZT(2)-Zz(1))/DZ
+              *(ZT(2)-ZZ(1))/DZ
       DO 164 K = 3, NK3
       PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
   164 CONTINUE
@@ -227,17 +188,16 @@ CONTAINS
       QV8 = QVBAR(K)
       QC8 = 0.D0
       QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      CALL SATURATION ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QVBAR(K) = QV8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
   168 CONTINUE
 
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
-!     PROFILES OF RHO, RHOz, AND GAMMA
+!     PROFILES OF RHO, RHOZ, AND GAMMA
 
       GAMFAC = HLF / CP
 
@@ -252,24 +212,24 @@ CONTAINS
   180 CONTINUE
 
 !     DENSITY
-      RHOz(1) = PSFC / ( RGAS * TV(1) )
+      RHOZ(1) = PSFC / ( RGAS * TV(1) )
       DO 190 K = 2, NK3
       RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
-!     DENSITY FOR k=1/2
+!     DENSITY FOR K=1/2
       RHO(1) = RHOZ(1)
 
 
       DO 101 K=1,NK3
-      ZW(K)=ZZ(K)  ! This line added with removal of equivalence in constld
-      ZU(K)=ZT(K)  ! This line added with removal of equivalence in constld
-      FNU(K)=FNT(K)  ! This line added with removal of equivalence in constld
-      FNW(K)=FNZ(K)  ! This line added with removal of equivalence in constld
-      RHOT(K)=RHO(K)  ! This line added with removal of equivalence in constld
-      RHOU(K)=RHO(K)  ! This line added with removal of equivalence in constld
+      ZW(K)=ZZ(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
+      ZU(K)=ZT(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
+      FNU(K)=FNT(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
+      FNW(K)=FNZ(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
+      RHOT(K)=RHO(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
+      RHOU(K)=RHO(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
   101 CONTINUE  
       DO 102 K=1,NK2
-      RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
+      RHOW(K)=RHOZ(K)  ! THIS LINE ADDED WITH REMOVAL OF EQUIVALENCE IN CONSTLD
   102 CONTINUE
 
       DO 200 K = 2, NK3
@@ -307,29 +267,29 @@ CONTAINS
 
 !     OCEAN POINTS
 
-      DO 300 J = mjm,mjp
-      DO 300 I = mim,mip
+      DO 300 J = MJM,MJP
+      DO 300 I = MIM,MIP
       GWET(I,J)  = -1.
       TG(I,J) = SST
-! sst by jjsun
-      IQ = ni_sbdm*mi1+I
-      JQ = nj_sbdm*mj1+J
-      TGout(IQ,JQ)=SST
-      if (IQ.GE.MI_glob/8*3+1.and.IQ.LE.MI_glob/8*5) then
+! SST BY JJSUN
+      IQ = NI_SBDM*MI1+I
+      JQ = NJ_SBDM*MJ1+J
+      TGOUT(IQ,JQ)=SST
+      IF (IQ.GE.MI_GLOB/8*3+1.AND.IQ.LE.MI_GLOB/8*5) THEN
       TG(I,J) = SST2
-      TGout(IQ,JQ) = SST2
-      elseif (IQ.GE.MI_glob/8*2+1.and.IQ.LE.MI_glob/8*3) then
-      TG(I,J) = SST + (SST2-SST)*(IQ-MI_glob/8*2)/(MI_glob/8)
-      TGout(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_glob/8*2)/(MI_glob/8)
-      elseif (IQ.GE.MI_glob/8*5+1.and.IQ.LE.MI_glob/8*6) then
-      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_glob/8*5)/(MI_glob/8)
-      TGout(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_glob/8*5)/(MI_glob/8)
-      endif
+      TGOUT(IQ,JQ) = SST2
+      ELSEIF (IQ.GE.MI_GLOB/8*2+1.AND.IQ.LE.MI_GLOB/8*3) THEN
+      TG(I,J) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+      TGOUT(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+      ELSEIF (IQ.GE.MI_GLOB/8*5+1.AND.IQ.LE.MI_GLOB/8*6) THEN
+      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+      TGOUT(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+      ENDIF
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      locean = .true.
-      psfx = .false.
+      LOCEAN = .TRUE.
+      PSFX = .FALSE.
 
       WRITE(95,*) '************* INITIAL PROFILE ****************'
       WRITE(95,401)
@@ -342,37 +302,37 @@ CONTAINS
       WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
 
 
-  401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
-       'QVBAR(g/kg)',2X,'U(m/s)'//)
+  401 FORMAT (7X,'Z(M)',2X,'PBAR(MB)',4X,'T(K)',4X,'THBAR(K)',2X,  &
+       'QVBAR(G/KG)',2X,'U(M/S)'//)
 
   402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
 
-  403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
+  403 FORMAT (7X,'Z(M)',3X,'Q1LS(K/DAY)',1X,'Q2LS(K/DAY)'//)
   404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
 
-      if(my_task == 0) then
-      OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
-      access='direct',recl=nk3)
-      temp=thbar
-      write(99,rec=1) temp
-      temp=qvbar
-      write(99,rec=2) temp
-      temp=pbar
-      write(99,rec=3) temp
-      temp=pibar
-      write(99,rec=4) temp
-      temp=rho
-      write(99,rec=5) temp
+      IF(MY_TASK == 0) THEN
+      OPEN(UNIT=99,FILE='BAR.DAT',FORM='UNFORMATTED',STATUS='UNKNOWN', &
+      ACCESS='DIRECT',RECL=NK3)
+      TEMP=THBAR
+      WRITE(99,REC=1) TEMP
+      TEMP=QVBAR
+      WRITE(99,REC=2) TEMP
+      TEMP=PBAR
+      WRITE(99,REC=3) TEMP
+      TEMP=PIBAR
+      WRITE(99,REC=4) TEMP
+      TEMP=RHO
+      WRITE(99,REC=5) TEMP
       CLOSE(99)
-      endif
+      ENDIF
 
 
 !*********************************************************
-!     2. SET UP the thermodynamic variables for 3D-frame
+!     2. SET UP THE THERMODYNAMIC VARIABLES FOR 3D-FRAME
 !*********************************************************
       DO 500 K = 1, NK3
-      DO 500 J = mjm,mjp
-      DO 500 I = mim,mip
+      DO 500 J = MJM,MJP
+      DO 500 I = MIM,MIP
       TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
@@ -414,16 +374,16 @@ CONTAINS
 !*******************************************
 
       DO 600 K = 1, NK2
-      DO 600 J = mjm,mjp
-      DO 600 I = mim,mip
+      DO 600 J = MJM,MJP
+      DO 600 I = MIM,MIP
       Z3DX(I,J,K)=0.
       Z3DY(I,J,K)=0.
       W3D(I,J,K) =0.
   600 CONTINUE
 
       DO 610 K = 1, NK3
-      DO 610 J = mjm,mjp
-      DO 610 I = mim,mip
+      DO 610 J = MJM,MJP
+      DO 610 I = MIM,MIP
       Z3DZ(I,J,K)=0.
       U3DX(I,J,K)=0
       U3DY(I,J,K)=0
@@ -445,9 +405,9 @@ CONTAINS
 !     INSTANT NUDGING
 !     OF THE AREA MEAN OF HORIZONTAL WIND TO THE INITIAL VALUE.
 
-      CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
-      CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
-      CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
+      CALL XYAVG2(Z3DX,NHALO,MI1,MJ1,NK2,2,NK1,Z3DX0)
+      CALL XYAVG2(Z3DY,NHALO,MI1,MJ1,NK2,2,NK1,Z3DY0)
+      CALL XYAVG1(Z3DZ(:,:,NK2), NHALO, MI1, MJ1, Z3DZ0)
 !-------------------
 #endif
 
@@ -472,24 +432,24 @@ CONTAINS
       CALL BOUND_ARB (NK2,DEFYZ)
 #endif
 
-      CALL xyavg1(u3dx(:,:,nk2), nhalo, mi1, mj1, utmn)
-      CALL xyavg1(u3dy(:,:,nk2), nhalo, mi1, mj1, vtmn)
+      CALL XYAVG1(U3DX(:,:,NK2), NHALO, MI1, MJ1, UTMN)
+      CALL XYAVG1(U3DY(:,:,NK2), NHALO, MI1, MJ1, VTMN)
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0) CALL UPDATE_TRACER_init
+      IF(ITT == 0) CALL UPDATE_TRACER_INIT
       
-   END SUBROUTINE ini_3d
+   END SUBROUTINE INI_3D
 
 
       SUBROUTINE PTSPEC
-      REAL(kind=dbl_kind) :: &
-      height,L,H,HT,tmp
-      integer(kind=int_kind) :: &
-      i,j,k,NN,midi,midj
-      real(kind=int_kind) :: &
-      twtopo(mi_glob,mj_glob) 
-      character(25) FILENAME,FILENAME2
+      REAL(KIND=DBL_KIND) :: &
+      HEIGHT,L,H,HT,TMP
+      INTEGER(KIND=INT_KIND) :: &
+      I,J,K,NN,MIDI,MIDJ
+      REAL(KIND=INT_KIND) :: &
+      TWTOPO(MI_GLOB,MJ_GLOB) 
+      CHARACTER(25) FILENAME,FILENAME2
 
       ITYPEU = 1
       ITYPEV = 1
@@ -497,27 +457,27 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
+!      DATA L/75000./,H/4000./ !WIDTH AND HEIGHT OF BELL SHAPED MOUNTAIN. 
 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      'RUNDATA/TOPO',NI_SBDM+1,'_',NJ_SBDM+1,'.DAT'
 
       PRINT*,FILENAME
 
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      OPEN(99,FILE=FILENAME,FORM='UNFORMATTED',STATUS='OLD')
       READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
       CLOSE(99)
 
-      tmp = maxval(HX)
-      CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
-      maxtopo=INT(H) + 1
+      TMP = MAXVAL(HX)
+      CALL MPI_ALLREDUCE(TMP,H,1,MPI_DBL_KIND, MPI_MAX, MPI_COMM_WORLD, MPIERR)
+      MAXTOPO=INT(H) + 1
 
-      call bound_arb(1,HX)
+      CALL BOUND_ARB(1,HX)
 
       DO I=1,MI1
       DO J=1,MJ1
-      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+      IF(HX(I+1,J)-HX(I,J) .GT. 0) HXU(I,J)=HX(I+1,J)
+      IF(HX(I,J+1)-HX(I,J) .GT. 0) HXV(I,J)=HX(I,J+1)
       ENDDO
       ENDDO
 
@@ -534,11 +494,11 @@ CONTAINS
       ENDDO
       ENDDO
 
-      call bound_int_arb(NK2,ITYPEW)
+      CALL BOUND_INT_ARB(NK2,ITYPEW)
 
       DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
+      DO J=MJM,MJP
+      DO I=MIM,MIP
       NN=ITYPEW(I,J,K)
       IF(NN .EQ. 0) THEN
       ITYPEU(I-1,J,K)=0
@@ -548,32 +508,32 @@ CONTAINS
       ENDDO
       ENDDO
 
-      call bound_int_arb(NK2,ITYPEU)
-      call bound_int_arb(NK2,ITYPEV)
+      CALL BOUND_INT_ARB(NK2,ITYPEU)
+      CALL BOUND_INT_ARB(NK2,ITYPEV)
 
-      DO J=mjm,mjp
-      DO I=mim,mip
+      DO J=MJM,MJP
+      DO I=MIM,MIP
       IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
       ENDDO
       ENDDO
 
 
 #else
-      hx=1
-      maxtopo=2
+      HX=1
+      MAXTOPO=2
 #endif
 
 #if defined (DIFFUSION)
-      call turb_3d_ini
+      CALL TURB_3D_INI
 #if defined (LSM)
-      call land_ini
+      CALL LAND_INI
 #endif
 #endif
 
       ENDSUBROUTINE PTSPEC
 
 
-!^^^^^endif for #if !defined (RESTART)
+!^^^^^ENDIF FOR #IF !DEFINED (RESTART)
 
 
-END MODULE ini_3d_module
+END MODULE INI_3D_MODULE
