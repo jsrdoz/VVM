@@ -894,7 +894,7 @@ CONTAINS
 #if defined (PHYSICS)
       if(itt /= 0) then
         CALL XYAVG1(SPREC,nhalo,mi1,mj1,sfmn)
-        if(my_task == 0) write(6,*)'This is the mean surface precipitation:  ',sfmn
+        if(my_task == 0) write(6,*)'This is the mean surface precipitation(mm/day):  ',sfmn*86400
       endif
 #endif
 
@@ -1097,7 +1097,7 @@ CONTAINS
       DO 3227 I=1,mi1
       STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J)
       STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J)
-      STD_RAD(I,J,3,8)=STD_RAD(I,J,2,8)+FULWTOA(I,J)
+      STD_RAD(I,J,3,8)=STD_RAD(I,J,3,8)+FULWTOA(I,J)
  3227 CONTINUE
 
       DO 1041 K=1, NK2
@@ -1146,7 +1146,6 @@ CONTAINS
 
 !------------------------------------------------------------------------------
 ! *** WRITE MODEL OUTPUT ***
-
 !------------------------------------------------------------------------------
 
       time_start(1) = (ITT/NXSAVG) + 1
@@ -1300,31 +1299,31 @@ CONTAINS
 #if defined (PHYSICS)
 ! formerly OUT_tm5      
 #if defined (PARALLELIO) 
-        call pCDF_WRITE_xy(ncid_phys, 'uw', TIME_C, time_start, std_tm5(:,:,1) )
-        call pCDF_WRITE_xy(ncid_phys, 'wv', TIME_C, time_start, std_tm5(:,:,2) )
-        call pCDF_WRITE_xy(ncid_phys, 'wth', TIME_C, time_start, std_tm5(:,:,3) )
-        call pCDF_WRITE_xy(ncid_phys, 'wqv', TIME_C, time_start, std_tm5(:,:,4) )
-        call pCDF_WRITE_xy(ncid_phys, 'sprec', TIME_C, time_start, std_tm5(:,:,5) )
-        call pCDF_WRITE_xy(ncid_phys, 'prec25', TIME_C, time_start, std_tm5(:,:,6) )
-        call pCDF_WRITE_xy(ncid_phys, 'olr', TIME_C, time_start, std_tm5(:,:,7) )
+        call pCDF_WRITE_xy(ncid_phys, 'uw'    , TIME_C, time_start, std_tm5(:,:,1) )
+        call pCDF_WRITE_xy(ncid_phys, 'wv'    , TIME_C, time_start, std_tm5(:,:,2) )
+        call pCDF_WRITE_xy(ncid_phys, 'wth'   , TIME_C, time_start, std_tm5(:,:,3) )
+        call pCDF_WRITE_xy(ncid_phys, 'wqv'   , TIME_C, time_start, std_tm5(:,:,4) )
+        call pCDF_WRITE_xy(ncid_phys, 'sprec' , TIME_C, time_start, std_tm5(:,:,5) )
+        call pCDF_WRITE_xy(ncid_phys, 'olr'   , TIME_C, time_start, std_tm5(:,:,6) )
+        call pCDF_WRITE_xy(ncid_phys, 'prec25', TIME_C, time_start, std_tm5(:,:,7) )
 #else
       CALL gather(ivar5,std_tm5(:,:,1:ivar5), out_glob(:,:,1:ivar5))
 
       if(my_task == 0) THEN
         out_glob_xy(:,:) = out_glob(:,:,1)
-        call CDF_WRITE_XY(ncid_phys, 'uw', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'uw'    , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,2)
-        call CDF_WRITE_XY(ncid_phys, 'wv', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'wv'    , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,3)
-        call CDF_WRITE_XY(ncid_phys, 'wth', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'wth'   , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,4)
-        call CDF_WRITE_XY(ncid_phys, 'wqv', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'wqv'   , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,5)
-        call CDF_WRITE_XY(ncid_phys, 'sprec', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'sprec' , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,6)
-        call CDF_WRITE_XY(ncid_phys, 'prec25', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'olr'   , TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,7)
-        call CDF_WRITE_XY(ncid_phys, 'olr', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'prec25', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
       endif
 #endif
 

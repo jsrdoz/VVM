@@ -946,7 +946,7 @@ CONTAINS
       WQV(I,J) = WQ(I,J)*RHOZ(hx1)
       WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
 
-      IF (my_task .eq. 0 ) PRINT*, WT(I,J),PIBAR(hx1),RHOZ(hx1),hx1
+!      IF (my_task .eq. 0 ) PRINT*, WT(I,J),PIBAR(hx1),RHOZ(hx1),hx1
 
       if(hxu1 .gt. 0) then
       UW(I,J)  = UW(I,J)*RHOZ(hxu1)

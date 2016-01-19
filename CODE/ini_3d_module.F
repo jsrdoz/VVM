@@ -69,8 +69,10 @@ CONTAINS
       REAL (KIND=DBL_KIND) :: U1(33),V1(33)
       REAL (KIND=DBL_KIND) :: Q1OBS(20),Q2OBS(20),PQ1(20)
 
-      REAL (KIND=DBL_KIND) :: SST2
+      REAL (KIND=DBL_KIND) :: SST2,SST3(MI_GLOB,1)
       REAL (KIND=REAL_KIND):: TGOUT(MI_GLOB,MJ_GLOB)
+      
+      
 
       DATA P1 /1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
                 858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
@@ -265,26 +267,33 @@ CONTAINS
       VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
   220 CONTINUE 
 
+      OPEN(50, FILE='../RUNDATA/sst_5400.bin',access='direct',recl=4)
+      DO IQ=1, MI_GLOB
+      READ(50, rec=ii) SST3(IQ)
+      ENDDO
+
 !     OCEAN POINTS
 
       DO 300 J = MJM,MJP
       DO 300 I = MIM,MIP
       GWET(I,J)  = -1.
-      TG(I,J) = SST
+!      TG(I,J) = SST
 ! SST BY JJSUN
       IQ = NI_SBDM*MI1+I
       JQ = NJ_SBDM*MJ1+J
-      TGOUT(IQ,JQ)=SST
-      IF (IQ.GE.MI_GLOB/8*3+1.AND.IQ.LE.MI_GLOB/8*5) THEN
-      TG(I,J) = SST2
-      TGOUT(IQ,JQ) = SST2
-      ELSEIF (IQ.GE.MI_GLOB/8*2+1.AND.IQ.LE.MI_GLOB/8*3) THEN
-      TG(I,J) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
-      TGOUT(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
-      ELSEIF (IQ.GE.MI_GLOB/8*5+1.AND.IQ.LE.MI_GLOB/8*6) THEN
-      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
-      TGOUT(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
-      ENDIF
+!      TGOUT(IQ,JQ)=SST
+!      IF (IQ.GE.MI_GLOB/8*3+1.AND.IQ.LE.MI_GLOB/8*5) THEN
+!      TG(I,J) = SST2
+!      TGOUT(IQ,JQ) = SST2
+!      ELSEIF (IQ.GE.MI_GLOB/8*2+1.AND.IQ.LE.MI_GLOB/8*3) THEN
+!      TG(I,J) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+!      TGOUT(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+!      ELSEIF (IQ.GE.MI_GLOB/8*5+1.AND.IQ.LE.MI_GLOB/8*6) THEN
+!      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+!      TGOUT(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+!      ENDIF
+       TG(I,J) = SST3(IQ)
+
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
