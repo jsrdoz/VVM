@@ -67,8 +67,7 @@
           PIBAR, &  ! Non-dimensional pressure at model layers
           RHO, &    ! Density at model layers
           THBAR, &  ! Basic state potential temperature profile at model layers
-          THBARZ    ! Basic state potential temperature profile at model
-interfaces
+          THBARZ    ! Basic state potential temperature profile at model interfaces
 
       LOGICAL (KIND=log_kind), INTENT(IN) :: &
           NOTHERM
@@ -162,8 +161,7 @@ interfaces
       p0(0)  = PBAR(1)
 
       DO 20 K = 2, NK2
-        pi0(K-1)= PIBAR(K) + (PIBAR(K+1)-PIBAR(K)) / (ZT(K+1)-ZT(K)) *
-(ZZ(K)-ZT(K))
+        pi0(K-1)= PIBAR(K) + (PIBAR(K+1)-PIBAR(K)) / (ZT(K+1)-ZT(K)) *(ZZ(K)-ZT(K))
         p0(K-1) = PSFC * pi0(K-1) ** ( CP / RDRYA )
    20 CONTINUE
 
@@ -375,10 +373,8 @@ interfaces
 !          print *,'qi ',qi3d(i,j,k), qi(i,j,k-1)
 !          stop
 !        endif
-        qb4 = QV3D(i,j,k) + QC3D(i,j,k) +QI3D(i,j,k) +QS3D(i,j,k) +QG3D(i,j,k)
-+QR3D(i,j,k) 
-        qafter = QV(i,k-1) + QC(i,k-1) +QI(i,k-1) +QS(i,k-1) +QG(i,k-1)
-+QR(i,k-1) 
+        qb4 = QV3D(i,j,k) + QC3D(i,j,k) +QI3D(i,j,k) +QS3D(i,j,k) +QG3D(i,j,k)+QR3D(i,j,k) 
+        qafter = QV(i,k-1) + QC(i,k-1) +QI(i,k-1) +QS(i,k-1) +QG(i,k-1)+QR(i,k-1) 
         if(abs(qafter-qb4)/qb4 > 1.e-10_dbl_kind) then
           print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,k-1)* pil0(K-1)
           print *,'q ',qb4, qafter
