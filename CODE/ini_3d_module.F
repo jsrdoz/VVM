@@ -299,7 +299,6 @@ CONTAINS
       IQ = NI_SBDM*MI1+I
       JQ = NJ_SBDM*MJ1+J
       TG(I,J) = SST3(IQ) + 273.15
-
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
