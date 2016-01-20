@@ -11,7 +11,8 @@ USE bound
 USE utils
 USE domain_decomposition
 #if defined (LSM)
-USE land_module
+USE land_module, only:land_interface,land_ini
+USE rad, only:lwDown_3D,swDown_3D
 #endif
 
 IMPLICIT NONE
@@ -330,10 +331,10 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-!         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-      CALL SFLUX_3D ! call sflux every time step 
+!      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
@@ -818,7 +819,14 @@ CONTAINS
       REAL (KIND=dbl_kind) ::    &
          VENTFC(2)
       REAL (KIND=dbl_kind) ::    &
-         WT(MI1,MJ1),WQ(MI1,MJ1),SPEEDTP(MI1,MJ1),VEN2D(mim:mip,mjm:mjp) 
+         WT(MI1,MJ1),            & ! surface heat flux out from LSM/SFLUX_2D
+         WQ(MI1,MJ1),            & ! surface water flux out from LSM/SFLUX_2D
+         SPEEDTP(MI1,MJ1),       & ! surface spd flux input for LSM/SFLUX_2
+         QG(MI1,MJ1),            & ! surface qv flux input for LSM/SFLUX_2
+         T2(MI1,MJ1),            & ! second lv tmperature for LSM
+         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
+         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -833,28 +841,44 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
       INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
+         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim       ! do loop indices for zonal, meridional and vertical dimensions
 
-#if defined (LSM)
-
-      call land_interface(WT,WQ(I,j),VEN2D(I,J))
-
-#else
       CP = 1004.5
-!==========================================================
+      pi = 4._8 * atan(1._8)
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
+      tempim=dble(mim_glob(my_task+1)+i-1)
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
       SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
                            +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
-      if(hx1 .ge. 2) then
-      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
-      gwet(i,j)=0.8
-      endif
+!      if(hx1 .ge. 2) then
+!      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
+!      gwet(i,j)=0.8
+!      endif
+
+!ccwu for sst gradient test
   100 CONTINUE
+
+#if defined (LSM)
+
+      DO 105 J = 1,MJ1
+      DO 105 I = 1,MI1
+
+      hxp=INT(hx(I,J))+1
+      T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
+      QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
+      swD(I,J) = swDown_3D(I,J,hxp)
+      lwD(I,J) = lwDown_3D(I,J,hxp)
+
+  105 CONTINUE
+
+      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ,VEN2D,SPEEDTP)
+
+#else
+!==========================================================
 
       DO 110 J=1,MJ1
       DO 110 I=1,MI1
@@ -862,14 +886,13 @@ CONTAINS
       hx1=INT(hx(I,J))
 
       ES1  = ES ( TG(I,J) )
-      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
+      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
       TS   = CP * TG(I,J) + GRAV * ZW(hx1)
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
       T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
              -(HLF+HLM)*QI3D(I,J,hxp)
-
 
       ZROUGH1 = ZROUGH(I,J)
       SPEEDM  = SPEEDTP(I,J)
@@ -902,7 +925,6 @@ CONTAINS
   110 CONTINUE
 
 #endif
-
       CALL BOUND_ARB (1,VEN2D)
 
       DO 120 J=1,MJ1
@@ -947,7 +969,6 @@ CONTAINS
       WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
 
 !      IF (my_task .eq. 0 ) PRINT*, WT(I,J),PIBAR(hx1),RHOZ(hx1),hx1
-
       if(hxu1 .gt. 0) then
       UW(I,J)  = UW(I,J)*RHOZ(hxu1)
       else
@@ -959,12 +980,6 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-!      print*,"WQV(1,1) = ",WQV(1,1)
-!      print*,"WQV(120,240) = ",WQV(120,240)
-!      print*,"WTH(120,240) = ",WTH(120,240)
-!      print*,"CP = ",CP
-!      print*,"PIBAR = ",PIBAR(int(hx(120,240)))
-!   print*,"sflux_3d done"
 
    END SUBROUTINE sflux_3d
 
@@ -1294,6 +1309,10 @@ SUBROUTINE TURB_3D_INI
       DHWW2(I,J,1)=0.
       ENDDO
       ENDDO
+
+#if defined (LSM)
+      call land_ini(hx)
+#endif
 #endif
 
    END SUBROUTINE TURB_3D_INI

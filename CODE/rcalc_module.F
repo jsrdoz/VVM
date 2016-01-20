@@ -48,7 +48,6 @@ CONTAINS
 
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
-
 #if defined (PHYSICS)
 
       CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
@@ -82,8 +81,6 @@ CONTAINS
       call timer_stop('advection')
 
       call timer_start('forcing')
-!ccwu      IF ( START .AND. ITT .LT. ITSTOP )   &
-!           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
 
      IF ( START .AND. ITT .LT. ITSTOP )   &
            CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)

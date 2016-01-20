@@ -18,6 +18,9 @@ USE LAND_MODULE
 #endif
 #endif
 USE PETSCSYS
+#if defined (RADCODE)
+USE rrtm_vars, only: sstxy,albdo
+#endif 
 
 IMPLICIT NONE
 PRIVATE
@@ -408,8 +411,6 @@ CONTAINS
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
-      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW    &
-                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
       CALL BOUND_3D_XY
 
@@ -450,7 +451,7 @@ CONTAINS
       CALL XYAVG1(U3DY(:,:,NK2), NHALO, MI1, MJ1, VTMN)
       UTMN0 = UTMN
       VTMN0 = VTMN
-      
+
       IF(ITT == 0) CALL UPDATE_TRACER_INIT
       
    END SUBROUTINE INI_3D
@@ -464,6 +465,13 @@ CONTAINS
       REAL(KIND=INT_KIND) :: &
       TWTOPO(MI_GLOB,MJ_GLOB) 
       CHARACTER(25) FILENAME,FILENAME2
+  
+      albdo = 0.30
+   
+#if defined (DIFFUSION)
+      call turb_3d_ini
+#endif
+ 
 
       ITYPEU = 1
       ITYPEV = 1
@@ -471,8 +479,7 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !WIDTH AND HEIGHT OF BELL SHAPED MOUNTAIN. 
-
+      IF (.false.) THEN
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',NI_SBDM+1,'_',NJ_SBDM+1,'.DAT'
 
@@ -486,7 +493,10 @@ CONTAINS
       CALL MPI_ALLREDUCE(TMP,H,1,MPI_DBL_KIND, MPI_MAX, MPI_COMM_WORLD, MPIERR)
       MAXTOPO=INT(H) + 1
 
-      CALL BOUND_ARB(1,HX)
+      call bound_arb(1,HX)
+      ENDIF
+!le for debug 
+      HX = 1
 
       DO I=1,MI1
       DO J=1,MJ1
@@ -530,7 +540,6 @@ CONTAINS
       IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
       ENDDO
       ENDDO
-
 
 #else
       HX=1

@@ -703,6 +703,7 @@ CONTAINS
 
       tmp = (sum(1)+sum(2))/sum(1)
       tem(1) = 0.
+
       if (sum(1) .LT. 1.e-16 .or. tmp .LT. 0.98) TMP = 1.
 
       IF (MY_TASK .EQ. 0) PRINT*, name,tmp
