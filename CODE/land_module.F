@@ -5,7 +5,7 @@ USE kinds
 USE parmsld
 USE constld
 USE domain_decomposition
-USE rrtm_vars, only: sstxy,albdo
+USE rrtm_vars, only: sstxy
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -109,7 +109,7 @@ CONTAINS
       WT = dble(WTi)
       WQ = dble(WQi)
 !      PRINT*, lALBEDO(10,10),lT1(10,10),'land'
-      albdo = lALBEDO
+!      albdo = lALBEDO
       sstxy = lT1
 
 !       WT = 0.
@@ -376,7 +376,7 @@ CONTAINS
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
                        lALBEDO,lEMISSI,lCMC,lT1,lST,lSM,lSL,lET,lSMAV)
 
-   albdo = lALBEDO 
+ !  albdo = lALBEDO 
    sstxy = lT1
 
 #endif

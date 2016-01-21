@@ -57,7 +57,6 @@ module rad
 
   real, dimension(:), allocatable :: &
        tg_slice, & ! surface temperature, K
-       albedo_slice, &
        pres_input, &
        presi_input, &
        latitude_slice, &

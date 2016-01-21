@@ -71,7 +71,7 @@ contains
     rei = retab(index) * (1. - fraction) + retab(index+1) * fraction
   end function computeRe_Ice
   !-----------------------------------------------------------------------
-  subroutine albedo(ocean, albdo, coszrs, asdir, aldir, asdif, aldif)
+  subroutine albedo(ocean,  coszrs, asdir, aldir, asdif, aldif)
     !-----------------------------------------------------------------------
     ! Computes surface albedos over ocean 
     ! and the surface (added by Marat Khairoutdinov)
@@ -93,7 +93,7 @@ contains
     ! Journal of Geophysical Research, Vol 97, D7, pp7603-7612).
     
     logical,            intent( in) :: ocean
-    real, dimension(:), intent( in) :: albdo, & ! slice albedo
+    real, dimension(:), intent( in) ::        & ! slice albedo
                                        coszrs   ! Cosine of solar zenith angle
     real, dimension(:), intent(out) :: asdir, & ! Srf alb for direct rad   0.2-0.7 micro-ms
                                        aldir, & ! Srf alb for direct rad   0.7-5.0 micro-ms
@@ -129,10 +129,10 @@ contains
       end where
     endif
     else
-        asdir = albdo
-        asdif = albdo
-        aldir = albdo
-        aldif = albdo
+!        asdir = albdo
+!        asdif = albdo
+!        aldir = albdo
+!        aldif = albdo
     endif
 
   end subroutine albedo

@@ -18,9 +18,6 @@ USE LAND_MODULE
 #endif
 #endif
 USE PETSCSYS
-#if defined (RADCODE)
-USE rrtm_vars, only: sstxy
-#endif 
 
 IMPLICIT NONE
 PRIVATE
@@ -73,11 +70,7 @@ CONTAINS
       REAL (KIND=DBL_KIND) :: Q1OBS(20),Q2OBS(20),PQ1(20)
 
       REAL (KIND=DBL_KIND) :: SST2
-      REAL (KIND=REAL_KIND) :: SST3(MI_GLOB)
       REAL (KIND=REAL_KIND):: TGOUT(MI_GLOB,MJ_GLOB)
-      CHARACTER*100 :: PTH
-      INTEGER :: ii,num
-      
 
       DATA P1 /1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
                 858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
@@ -272,36 +265,26 @@ CONTAINS
       VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
   220 CONTINUE 
 
-
-      PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_5400.bin'
-      OPEN(UNIT=99,FILE=pth,FORM='unformatted', &
-      STATUS='OLD',access='direct',recl=1)
-      num=1
-      do k=1,MI_GLOB
-      READ(99,rec=num) SST3(k)
-      num=num+1
-      enddo
-      CLOSE(99)
-
-
 !     OCEAN POINTS
-
-      PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_5400.bin'
-      OPEN(UNIT=99,FILE=PTH,FORM='unformatted', &
-      STATUS='OLD',access='direct',recl=1)
-      num=1
-      do k=1,MI_GLOB
-      READ(99,rec=num) SST3(k)
-      num=num+1
-      enddo
-      CLOSE(99)
 
       DO 300 J = MJM,MJP
       DO 300 I = MIM,MIP
       GWET(I,J)  = -1.
+      TG(I,J) = SST
+! SST BY JJSUN
       IQ = NI_SBDM*MI1+I
       JQ = NJ_SBDM*MJ1+J
-      TG(I,J) = SST3(IQ) + 273.15
+      TGOUT(IQ,JQ)=SST
+      IF (IQ.GE.MI_GLOB/8*3+1.AND.IQ.LE.MI_GLOB/8*5) THEN
+      TG(I,J) = SST2
+      TGOUT(IQ,JQ) = SST2
+      ELSEIF (IQ.GE.MI_GLOB/8*2+1.AND.IQ.LE.MI_GLOB/8*3) THEN
+      TG(I,J) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+      TGOUT(IQ,JQ) = SST + (SST2-SST)*(IQ-MI_GLOB/8*2)/(MI_GLOB/8)
+      ELSEIF (IQ.GE.MI_GLOB/8*5+1.AND.IQ.LE.MI_GLOB/8*6) THEN
+      TG(I,J) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+      TGOUT(IQ,JQ) = SST2 + (SST-SST2)*(IQ-MI_GLOB/8*5)/(MI_GLOB/8)
+      ENDIF
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -411,6 +394,8 @@ CONTAINS
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW    &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
       CALL BOUND_3D_XY
 
@@ -451,7 +436,7 @@ CONTAINS
       CALL XYAVG1(U3DY(:,:,NK2), NHALO, MI1, MJ1, VTMN)
       UTMN0 = UTMN
       VTMN0 = VTMN
-
+      
       IF(ITT == 0) CALL UPDATE_TRACER_INIT
       
    END SUBROUTINE INI_3D
@@ -465,13 +450,6 @@ CONTAINS
       REAL(KIND=INT_KIND) :: &
       TWTOPO(MI_GLOB,MJ_GLOB) 
       CHARACTER(25) FILENAME,FILENAME2
-  
-!      albdo = 0.30
-   
-#if defined (DIFFUSION)
-      call turb_3d_ini
-#endif
- 
 
       ITYPEU = 1
       ITYPEV = 1
@@ -479,7 +457,8 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-      IF (.false.) THEN
+!      DATA L/75000./,H/4000./ !WIDTH AND HEIGHT OF BELL SHAPED MOUNTAIN. 
+
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',NI_SBDM+1,'_',NJ_SBDM+1,'.DAT'
 
@@ -493,10 +472,7 @@ CONTAINS
       CALL MPI_ALLREDUCE(TMP,H,1,MPI_DBL_KIND, MPI_MAX, MPI_COMM_WORLD, MPIERR)
       MAXTOPO=INT(H) + 1
 
-      call bound_arb(1,HX)
-      ENDIF
-!le for debug 
-      HX = 1
+      CALL BOUND_ARB(1,HX)
 
       DO I=1,MI1
       DO J=1,MJ1
@@ -540,6 +516,7 @@ CONTAINS
       IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
       ENDDO
       ENDDO
+
 
 #else
       HX=1
