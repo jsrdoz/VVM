@@ -298,14 +298,14 @@ CONTAINS
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      DO 301 J = 1,1
-      DO 301 I = MIM+1,MIP-1
-      IQ = NI_SBDM*MI1+I
-      JQ = NJ_SBDM*MJ1+J
-      do k=0,89
-      if (my_task==k)  write(100+k,*) 'SST',IQ,TG(I,J) 
-      enddo
-  301 CONTINUE
+!      DO 301 J = 1,1
+!      DO 301 I = MIM+1,MIP-1
+!      IQ = NI_SBDM*MI1+I
+!      JQ = NJ_SBDM*MJ1+J
+!      do k=0,89
+!      if (my_task==k)  write(100+k,*) 'SST',IQ,TG(I,J) 
+!      enddo
+!  301 CONTINUE
 
       LOCEAN = .TRUE.
       PSFX = .FALSE.
