@@ -20,6 +20,7 @@ USE q_chk_module
 USE cloud_module
 USE rcalc_module
 USE timer
+USE DOMAIN_DECOMPOSITION, only:my_task
 
 IMPLICIT NONE
 PRIVATE
@@ -117,7 +118,9 @@ CONTAINS
                           sprec, cldfrc, fztopb, fzxtb, fzytb)
 #else
 !default diffusion/turbulence scheme
+      IF (my_task==0) write(6,*) 'starting TURB_3D'
       CALL TURB_3D ( ITT )
+      IF (my_task==0) write(6,*) 'finishing TURB_3D'
 #endif
       call timer_stop('TURB_3D')
 

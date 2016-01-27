@@ -12,6 +12,7 @@ USE update_thermo_module
 USE force_3d_module
 USE advec_3d_module
 USE timer
+USE DOMAIN_DECOMPOSITION, only:my_task
 
 IMPLICIT NONE
 PRIVATE
@@ -192,11 +193,11 @@ CONTAINS
                              RHO,PSFC,NOTHERM,NRAD,tg(1:mi1,1:mj1),      &
                              DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
       call timer_stop('physics')
-
-
+      IF (my_task==0) write(6,*) 'Finishing physics_interface'
 
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
       CALL update_thermodynamics (N1,N2)
+      IF (my_task==0) write(6,*) 'Finishing update_thermodynamics'
 
 ! Nudge mean water vapor and mean potential temperature to mean (if so defined in nudge)
       CALL NUDGE

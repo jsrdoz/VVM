@@ -96,6 +96,7 @@ CONTAINS
      
 
       CASENAME= 'GATE_PHASE_III'
+!      CASENAME= 'TWP-ICE'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -272,18 +273,7 @@ CONTAINS
       VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
   220 CONTINUE 
 
-
-      PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_5400.bin'
-      OPEN(UNIT=99,FILE=pth,FORM='unformatted', &
-      STATUS='OLD',access='direct',recl=1)
-      num=1
-      do k=1,MI_GLOB
-      READ(99,rec=num) SST3(k)
-      num=num+1
-      enddo
-      CLOSE(99)
-
-
+      VG = 5.0
 !     OCEAN POINTS
 
       PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_5400.bin'
@@ -292,18 +282,30 @@ CONTAINS
       num=1
       do k=1,MI_GLOB
       READ(99,rec=num) SST3(k)
+      SST3(k)=SST3(k)+273.15
       num=num+1
       enddo
       CLOSE(99)
+
 
       DO 300 J = MJM,MJP
       DO 300 I = MIM,MIP
       GWET(I,J)  = -1.
       IQ = NI_SBDM*MI1+I
       JQ = NJ_SBDM*MJ1+J
-      TG(I,J) = SST3(IQ) + 273.15
+      TG(I,J) = SST3(IQ) 
+      TGOUT(IQ,JQ) = SST3(IQ)
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
+
+      DO 301 J = 1,1
+      DO 301 I = MIM+1,MIP-1
+      IQ = NI_SBDM*MI1+I
+      JQ = NJ_SBDM*MJ1+J
+      do k=0,89
+      if (my_task==k)  write(100+k,*) 'SST',IQ,TG(I,J) 
+      enddo
+  301 CONTINUE
 
       LOCEAN = .TRUE.
       PSFX = .FALSE.
@@ -317,6 +319,7 @@ CONTAINS
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
       WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
+
 
 
   401 FORMAT (7X,'Z(M)',2X,'PBAR(MB)',4X,'T(K)',4X,'THBAR(K)',2X,  &
@@ -403,7 +406,7 @@ CONTAINS
       DO 610 I = MIM,MIP
       Z3DZ(I,J,K)=0.
       U3DX(I,J,K)=0
-      U3DY(I,J,K)=0
+      U3DY(I,J,K)=5
   610 CONTINUE
 
       DO 660 K = 2, NK1

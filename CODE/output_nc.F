@@ -714,8 +714,8 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_phys, 'sprec', 'Surface precipitation rate', &
                           'sfc_precip_rate', 'kg m-2 s-1', &
                           'yt','xt')
-      CALL pCDF_INI_XY_VAR(ncid_phys, 'prec25', 'Precipitation rate at 2.5 km height', &
-                          'precip_rate_2_5km', 'kg m-2 s-1', &
+      CALL pCDF_INI_XY_VAR(ncid_phys, 'sst', 'initial sea surface temperature', &
+                          'ini_sst', 'K', &
                           'yt','xt')
       CALL pCDF_INI_XY_VAR(ncid_phys, 'olr', 'Outgoing longwave radiation', &
                           'outgoing_longwave_radiation', 'W m-2', &
@@ -742,8 +742,8 @@ CONTAINS
       CALL CDF_INI_XY_VAR(ncid_phys, 'sprec', 'Surface precipitation rate', &
                           'sfc_precip_rate', 'kg m-2 s-1', &
                           'yt','xt')
-      CALL CDF_INI_XY_VAR(ncid_phys, 'prec25', 'Precipitation rate at 2.5 km height', &
-                          'precip_rate_2_5km', 'kg m-2 s-1', &
+      CALL CDF_INI_XY_VAR(ncid_phys, 'sst', 'initial sea surface temperature', &
+                          'ini_sst', 'K', &
                           'yt','xt')
       CALL CDF_INI_XY_VAR(ncid_phys, 'olr', 'Outgoing longwave radiation', &
                           'outgoing_longwave_radiation', 'W m-2', &
@@ -2462,16 +2462,16 @@ CONTAINS
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! PREC25
-      nc_err = nf90_def_var(ncid, 'prec25', NF90_DOUBLE, (/ xc_dim, yc_dim /), prec25_id_rst)
+      nc_err = nf90_def_var(ncid, 'sst', NF90_DOUBLE, (/ xc_dim, yc_dim /), prec25_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-      nc_err = nf90_put_att(ncid, prec25_id_rst, 'long_name', 'precipitation rate at 2.5 km height')
+      nc_err = nf90_put_att(ncid, prec25_id_rst, 'long_name', 'initial sst pattern')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-      nc_err = nf90_put_att(ncid, prec25_id_rst, 'standard_name', 'precip_rate_2_5_km')
+      nc_err = nf90_put_att(ncid, prec25_id_rst, 'standard_name', 'ini_sst')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-      nc_err = nf90_put_att(ncid, prec25_id_rst, 'units', 'kg m-2 s-1')
+      nc_err = nf90_put_att(ncid, prec25_id_rst, 'units', 'K')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nf90_put_att(ncid, prec25_id_rst, '_FillValue', dblval)
@@ -6383,16 +6383,16 @@ CONTAINS
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! PREC25 ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'prec25', NF_double, 2, (/ xc_dim, yc_dim /), prec25_id_rst)
+      nc_err = nfmpi_def_var(ncid, 'sst', NF_double, 2, (/ xc_dim, yc_dim /), prec25_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'long_name', 35_mpi_offset_kind, 'precipitation rate at 2.5 km height')
+      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'long_name', 35_mpi_offset_kind, 'initial sea surface temperature')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'standard_name', 18_mpi_offset_kind, 'precip_rate_2_5_km')
+      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'standard_name', 18_mpi_offset_kind, 'ini_sst')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'units', 10_mpi_offset_kind, 'kg m-2 s-1')
+      nc_err = nfmpi_put_att_text(ncid, prec25_id_rst, 'units', 10_mpi_offset_kind, 'K')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_double(ncid, prec25_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))

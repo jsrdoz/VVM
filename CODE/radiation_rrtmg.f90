@@ -288,7 +288,6 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
         if(masterproc) print *,'calling rad_full'
       CALL rad_full()
 !---------------------------------------------------
-
 ! Calculate potential temperature tendency term
       DO 140 K = 2, NK2
       DO 140 J = 1, MJ1
