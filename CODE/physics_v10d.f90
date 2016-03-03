@@ -2136,7 +2136,7 @@ IMPLICIT NONE
 
       TTT = T-TT;  I = INT(TTT)
       IF(I.LT.1 .OR. I.GT.151) then
-       write(*,*) 'Out of bound:',I,T
+       write(*,*) 'Out of bound:',I,T,131
        stop 131
       endif
       ESATW_result = ESWT(I)+(TTT-AINT(TTT))*DESWT(I)
@@ -2162,7 +2162,7 @@ IMPLICIT NONE
 
       TTT = T-TT;  I = INT(TTT)
       IF(I.LT.1 .OR. I.GT.151) then
-       write(*,*) 'Out of bound:',I,T
+       write(*,*) 'Out of bound:',I,T,132
        stop 132
       endif
       ESATI_result = ESIT(I)+(TTT-AINT(TTT))*DESIT(I)
@@ -2188,7 +2188,7 @@ IMPLICIT NONE
       
       TTT = T-TTD;  I = INT(TTT)
       IF(I.LT.1 .OR. I.GT.150) then
-       write(*,*) 'Out of bound:',I,T
+       write(*,*) 'Out of bound:',I,T,133
        stop 133
       endif
       deswdt_result = DESWT(I)+(TTT-AINT(TTT))*(DESWT(I+1)-DESWT(I))
@@ -2214,7 +2214,7 @@ IMPLICIT NONE
 
       TTT = T-TTD;  I = INT(TTT)
       IF(I.LT.1 .OR. I.GT.150) then
-       write(*,*) 'Out of bound:',I,T
+       write(*,*) 'Out of bound:',I,T,132.2
        stop 132
       endif
       desidt_result = DESIT(I)+(TTT-AINT(TTT))*(DESIT(I+1)-DESIT(I))

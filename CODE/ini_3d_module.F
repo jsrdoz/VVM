@@ -62,14 +62,14 @@ CONTAINS
 
       INTEGER NU1, NT1, K1, K2, IT
       LOGICAL LF
-      DATA NU1/33/,NT1/33/
+      DATA NU1/21/,NT1/21/
       REAL(KIND=DBL_KIND) :: RBCP, T8, P8, QV8, QC8, QI8, DUMMY, GDZBCP, CPBR, &
                              ES1, ALPHAW, PBARMB
       REAL (KIND=DBL_KIND) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
                              ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=DBL_KIND) :: ZT1(33),PI1(33),TV1(33),PILOG1(33)
-      REAL (KIND=DBL_KIND) :: P1(33),T1(33),QV1(33),QC1(33)
-      REAL (KIND=DBL_KIND) :: U1(33),V1(33)
+      REAL (KIND=DBL_KIND) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
+      REAL (KIND=DBL_KIND) :: P1(21),T1(21),QV1(21),QC1(21)
+      REAL (KIND=DBL_KIND) :: U1(21),V1(21)
       REAL (KIND=DBL_KIND) :: Q1OBS(20),Q2OBS(20),PQ1(20)
 
       REAL (KIND=DBL_KIND) :: SST2
@@ -77,22 +77,32 @@ CONTAINS
       REAL (KIND=REAL_KIND):: TGOUT(MI_GLOB,MJ_GLOB)
       CHARACTER*100 :: PTH
       INTEGER :: ii,num
-      
+    
+      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
+             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
+             ,133.6,111.3,92.6/
+      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
+             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
+             ,-726.4,-755.8,-749.0/
+      DATA QV1/165.0,165.0,165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.0/
+      DATA QC1/21*0./  
 
-      DATA P1 /1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
-                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
-                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
-                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
-                161.6, 139.4, 119.2, 101.4,  85.8 /
-      DATA T1/300.41,299.95,299.27,298.40,297.60,296.81,295.85,294.69 &
-             ,293.38,291.91,290.29,288.72,286.88,284.90,282.62,280.14 &
-             ,277.51,274.55,271.49,268.14,264.55,260.73,256.46,251.93 &
-             ,246.90,241.30,234.76,227.68,219.85,211.77,204.24,196.16 &
-             ,196.03/
-      DATA QV1/22.4,22.0,21.6,20.8,20.1,19.3,18.6,18.0,17.1,16.2,15.3 &
-              ,14.2,13.3,12.1,11.0,9.8,8.6,7.5,6.5,5.4,4.5,3.6,2.8,2.0 &
-              ,1.4,0.8,0.4,0.2,0.1,0.0,0.0,0.0,0.0/
-      DATA QC1/33*0./
+
+!      DATA P1 /1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
+!                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
+!                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
+!                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
+!                161.6, 139.4, 119.2, 101.4,  85.8 /
+!      DATA T1/300.41,299.95,299.27,298.40,297.60,296.81,295.85,294.69 &
+!             ,293.38,291.91,290.29,288.72,286.88,284.90,282.62,280.14 &
+!             ,277.51,274.55,271.49,268.14,264.55,260.73,256.46,251.93 &
+!             ,246.90,241.30,234.76,227.68,219.85,211.77,204.24,196.16 &
+!             ,196.03/
+!      DATA QV1/22.4,22.0,21.6,20.8,20.1,19.3,18.6,18.0,17.1,16.2,15.3 &
+!              ,14.2,13.3,12.1,11.0,9.8,8.6,7.5,6.5,5.4,4.5,3.6,2.8,2.0 &
+!              ,1.4,0.8,0.4,0.2,0.1,0.0,0.0,0.0,0.0/
+!      DATA QC1/33*0./
      
 
       CASENAME= 'GATE_PHASE_III'
@@ -116,14 +126,15 @@ CONTAINS
       ENDDO
 
       DO 100 K = 1, NT1
-      T1(K) = T1(K)
-      QV1(K)= QV1(K)*1E-3
+      T1(K) = T1(K)*0.1+273.15
+      QV1(K)= QV1(K)*1E-4
   100 CONTINUE
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
   110 CONTINUE
+      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -133,6 +144,7 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
+      if (my_task==1) print*,'11111111111111'
       CALL SATURATION ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
   120 CONTINUE
@@ -273,10 +285,10 @@ CONTAINS
       VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
   220 CONTINUE 
 
-      VG = 5.0
+      VG = 0.0
 !     OCEAN POINTS
 
-      PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_5400.bin'
+      PTH='/data5/jsrdoz/11.MODEL/54.VVM/RUNDATA/sst_1200.bin'
       OPEN(UNIT=99,FILE=PTH,FORM='unformatted', &
       STATUS='OLD',access='direct',recl=1)
       num=1
@@ -293,7 +305,8 @@ CONTAINS
       GWET(I,J)  = -1.
       IQ = NI_SBDM*MI1+I
       JQ = NJ_SBDM*MJ1+J
-      TG(I,J) = SST3(IQ) 
+      TG(I,J) = SST3(IQ)  
+!      TG(I,J)=-8*cos(real(IQ)/real(MI_glob)*2*PI) + 297.15
       TGOUT(IQ,JQ) = SST3(IQ)
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
@@ -303,7 +316,7 @@ CONTAINS
 !      IQ = NI_SBDM*MI1+I
 !      JQ = NJ_SBDM*MJ1+J
 !      do k=0,89
-!      if (my_task==k)  write(100+k,*) 'SST',IQ,TG(I,J) 
+!      if (my_task==k)  write(100+k,*) 'SST',IQ,TG(I,J),real(IQ)/real(MI_glob)
 !      enddo
 !  301 CONTINUE
 
@@ -405,8 +418,8 @@ CONTAINS
       DO 610 J = MJM,MJP
       DO 610 I = MIM,MIP
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=0
-      U3DY(I,J,K)=5
+      U3DX(I,J,K)=0.
+      U3DY(I,J,K)=5.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -455,7 +468,7 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
 
-      IF(ITT == 0) CALL UPDATE_TRACER_INIT
+!      IF(ITT == 0) CALL UPDATE_TRACER_INIT
       
    END SUBROUTINE INI_3D
 

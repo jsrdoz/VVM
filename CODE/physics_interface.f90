@@ -21,11 +21,10 @@
       USE general_parameters, only: dt, im, jm, km
       USE physics_parameters
       USE basic_state_parameters
-      USE main_variables, only: theta, qv, qc, qi, qr, qs, qg,nr, w
+      USE main_variables, only: theta, qv, qc, qi, qr, qs, qg, w
       USE physics_tendencies
       USE turb_surflx_variables, only: dz_mean, thetaS
 !      USE rad_variables_tendencies
-      
       USE rrtm_params, only: latitude, longitude
       USE rrtm_grid, only: day, day0, iyear
       USE rrtm_vars, only: sstxy
@@ -81,7 +80,7 @@
           A,B, qb4, qafter, hb4, hafter
 
       INTEGER (KIND=int_kind) :: &
-          i,j,k,L
+          i,j,k,L      ! add by mars for not calling too much rad
           
       LOGICAL (KIND=log_kind), SAVE :: &
           first_physics, first_rad
@@ -161,15 +160,16 @@
       p0(0)  = PBAR(1)
 
       DO 20 K = 2, NK2
-        pi0(K-1)= PIBAR(K) + (PIBAR(K+1)-PIBAR(K)) / (ZT(K+1)-ZT(K)) * (ZZ(K)-ZT(K))
+        pi0(K-1)= PIBAR(K) + (PIBAR(K+1)-PIBAR(K)) / (ZT(K+1)-ZT(K)) *(ZZ(K)-ZT(K))
         p0(K-1) = PSFC * pi0(K-1) ** ( CP / RDRYA )
    20 CONTINUE
 
 !-----------------------------------------------------------------------
 ! Sea surface temperature for radiation
 !-----------------------------------------------------------------------
+#if !defined (LSM)
       sstxy(:,:) = tg(:,:)
-
+#endif
 !-----------------------------------------------------------------------
 ! Sanity check
 !-----------------------------------------------------------------------
@@ -232,9 +232,8 @@
       call timer_start('radiation')
       first_rad = .FALSE.
 
-      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, DYNEW, &
-                            RLAT, RLON, DT, ZZ, ZT, RHO)
-
+      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, &
+                           DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 ! Update theta tendency term for TWP-ICE output
       DO 230 K=2,NK2
       DO 230 J=1,MJ1
@@ -258,7 +257,6 @@
       tendency_microphysics_qr    = 0.0_dbl_kind
       tendency_microphysics_qs    = 0.0_dbl_kind
       tendency_microphysics_qg    = 0.0_dbl_kind
-      tendency_microphysics_nr    = 0.0_dbl_kind
       latent_heating_rate         = 0.0_dbl_kind
       
 !-----------------------------------------------------------------------
@@ -274,7 +272,6 @@
         qr(i,k)    = QR3D(i,j,k+1)
         qs(i,k)    = QS3D(i,j,k+1)
         qg(i,k)    = QG3D(i,j,k+1)
-        nr(i,k)    = TC3D(i,j,k+1,1)
         thetaS(i)  = tg(i,j)
   100 CONTINUE
 
@@ -305,8 +302,7 @@
 
 #if defined (MICROCODE)      
       call timer_start('microphysics')
-!      CALL Microphysics
-      CALL Parachen
+      CALL Microphysics
       
 ! Surface precipitation
 !      DO 201 K=1,NK3
@@ -323,9 +319,10 @@
       DO 200 I=1,im
 !ccwu for total prec(rain+snow+graupel)
 !        SPREC(I,J)  = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
-        hxp=INT(hx(I,J))
-        SPREC(I,J) =VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
-!        PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
+         hxp=INT(hx(I,J))
+        SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
+!
+        PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
   200 CONTINUE
 
       call timer_stop('microphysics')
@@ -366,8 +363,8 @@
 ! Assign adjusted values back into model arrays
 
 ! Thermodynamic variables
-!      DO 500 k = 2, NK2
-!      DO 500 i = 1, MI1
+      DO 500 k = 2, NK2
+      DO 500 i = 1, MI1
 !        if(abs(th3d(i,j,k)-theta(i,j,k-1))/th3d(i,j,k) > 1.e-7_dbl_kind) then
 !          print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,j,k-1)* pil0(K-1)
 !          print *,'qv',qv3d(i,j,k), qv(i,j,k-1)
@@ -375,40 +372,39 @@
 !          print *,'qi ',qi3d(i,j,k), qi(i,j,k-1)
 !          stop
 !        endif
-!        qb4 = QV3D(i,j,k) + QC3D(i,j,k) +QI3D(i,j,k) +QS3D(i,j,k) +QG3D(i,j,k) +QR3D(i,j,k) 
-!        qafter = QV(i,k-1) + QC(i,k-1) +QI(i,k-1) +QS(i,k-1) +QG(i,k-1) +QR(i,k-1) 
-!        if(abs(qafter-qb4)/qb4 > 1.e-10_dbl_kind) then
-!          print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,k-1)* pil0(K-1)
-!          print *,'q ',qb4, qafter
-!          print *,'qv',qv3d(i,j,k), qv(i,k-1)
-!          print *,'qc ',qc3d(i,j,k), qc(i,k-1)
-!          print *,'qi ',qi3d(i,j,k), qi(i,k-1)
-!          print *,'qs ',qs3d(i,j,k), qs(i,k-1)
-!          print *,'qg ',qg3d(i,j,k), qg(i,k-1)
-!          print *,'qr ',qr3d(i,j,k), qr(i,k-1)
-!          stop
-!        endif
-!        TH3D(i,j,k) = theta(i,k-1)
-!        QV3D(i,j,k) = qv(i,k-1)
-!        QC3D(i,j,k) = qc(i,k-1)
-!        QI3D(i,j,k) = qi(i,k-1)
-!        QS3D(i,j,k) = qs(i,k-1)
-!        QG3D(i,j,k) = qg(i,k-1)
-!        QR3D(i,j,k) = qr(i,k-1)
-!  500 CONTINUE
+        qb4 = QV3D(i,j,k) + QC3D(i,j,k) +QI3D(i,j,k) +QS3D(i,j,k) +QG3D(i,j,k)+QR3D(i,j,k) 
+        qafter = QV(i,k-1) + QC(i,k-1) +QI(i,k-1) +QS(i,k-1) +QG(i,k-1)+QR(i,k-1) 
+        if(abs(qafter-qb4)/qb4 > 1.e-10_dbl_kind) then
+          print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,k-1)* pil0(K-1)
+          print *,'q ',qb4, qafter
+          print *,'qv',qv3d(i,j,k), qv(i,k-1)
+          print *,'qc ',qc3d(i,j,k), qc(i,k-1)
+          print *,'qi ',qi3d(i,j,k), qi(i,k-1)
+          print *,'qs ',qs3d(i,j,k), qs(i,k-1)
+          print *,'qg ',qg3d(i,j,k), qg(i,k-1)
+          print *,'qr ',qr3d(i,j,k), qr(i,k-1)
+          stop
+        endif
+        TH3D(i,j,k) = theta(i,k-1)
+        QV3D(i,j,k) = qv(i,k-1)
+        QC3D(i,j,k) = qc(i,k-1)
+        QI3D(i,j,k) = qi(i,k-1)
+        QS3D(i,j,k) = qs(i,k-1)
+        QG3D(i,j,k) = qg(i,k-1)
+        QR3D(i,j,k) = qr(i,k-1)
+  500 CONTINUE
 
-!#if defined (MICROCODE)
+#if defined (MICROCODE)
 ! Microphysics tendency terms & latent heating rate
       DO 510 k = 2, NK2
       DO 510 i = 1, MI1
         THAD_MICRO(i,j,k) = tendency_microphysics_theta(I,K-1)
         QVAD_MICRO(i,j,k) = tendency_microphysics_qv(I,K-1)
         QCAD_MICRO(i,j,k) = tendency_microphysics_qc(I,K-1)
-        QIAD_MICRO(i,j,k) = 0.
-        QSAD_MICRO(i,j,k) = 0.
-        QGAD_MICRO(i,j,k) = 0. !form C&L scheme
+        QIAD_MICRO(i,j,k) = tendency_microphysics_qi(I,K-1)
+        QSAD_MICRO(i,j,k) = tendency_microphysics_qs(I,K-1)
+        QGAD_MICRO(i,j,k) = tendency_microphysics_qg(I,K-1)
         QRAD_MICRO(i,j,k) = tendency_microphysics_qr(I,K-1)
-        NRAD_MICRO(i,j,k) = tendency_microphysics_nr(I,K-1)
         RLHR3D(i,j,k)     = latent_heating_rate(i,k-1)
   510 CONTINUE
 
@@ -417,9 +413,8 @@
       DO 520 k = 2, NK2
       DO 520 i = 1, MI1
         FQR3D(i,j,k,L) = FQR3D(i,j,k,L) + tendency_rain(i,k-1)
-        FTC3D(I,J,K,L,1) = FTC3D(I,J,K,L,1)+ tendency_nr(i,k-1)
-        FQS3D(i,j,k,L) = FQS3D(i,j,k,L) + 0.
-        FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + 0.
+        FQS3D(i,j,k,L) = FQS3D(i,j,k,L) + tendency_snow(i,k-1)
+        FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + tendency_graupel(i,k-1)
         FSED3D(i,j,k)  = tendency_sedimentation(i,k-1)
   520 CONTINUE
 
@@ -457,4 +452,3 @@
 
       RETURN
       END SUBROUTINE physics_interface
-      
